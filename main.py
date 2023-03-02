@@ -1,26 +1,27 @@
-import requests
-import json
-from colorama import Fore
-import os
+from requests import get
+from json import loads, load
+from os import unlink
+from sys import argv
+import argparse
 
-client_id = ""
+with open('config.json', 'r+') as file:
+  config = load(file)
+  client_id = config["id"]
   
 def user_scrape():
   try:
-    os.unlink("results.txt")
+    unlink("results.txt")
   except:
     pass
-  target = input("Enter Keyword: ")
-  search_result_json = requests.get(f"https://api-mobile.soundcloud.com/search/users?q={target}&limit=200&client_id={client_id}")
-  record = json.loads(search_result_json.text)
+  target = argv[2]
+  search_result_json = get(f"https://api-mobile.soundcloud.com/search/users?q={target}&limit=200&client_id={client_id}")
+  record = loads(search_result_json.text)
 
-  count=0
-  for records in record['collection']:
+  for count,records in enumerate(record['collection'],0):
     with open("results.txt", "a") as result_file:
-      count+=1
       try:
         result_file.write(f"""
-{Fore.GREEN}==================={Fore.RESET}
+===================
 Record: #{count}
 Display Name: {record['collection'][count]['username']}
 
@@ -31,7 +32,7 @@ Followers: {record['collection'][count]['followers_count']}
 Following: {record['collection'][count]['followings_count']}
 Creation Date: {record['collection'][count]['created_at']}
 Bio: {record['collection'][count]['description']}  
-{Fore.GREEN}==================={Fore.RESET}   
+=================== 
 """)
       except KeyError:
         pass
@@ -40,20 +41,17 @@ Bio: {record['collection'][count]['description']}
         
 def song_scrape():
   try:
-    os.unlink("results.txt")
+    unlink("results.txt")
   except:
     pass
-  target = input("Enter Keyword: ")
-  search_result_json = requests.get(f"https://api-mobile.soundcloud.com/search/tracks?q={target}&limit=200&client_id={client_id}")
-  record = json.loads(search_result_json.text)
-
-  counts = 0
-  for records in record['collection']:
+  target = argv[2]
+  search_result_json = get(f"https://api-mobile.soundcloud.com/search/tracks?q={target}&limit=200&client_id={client_id}")
+  record = loads(search_result_json.text)
+  for counts,records in enumerate(record['collection'],0):
     with open("results.txt", "a") as result_file:
-      counts += 1
       try:
         result_file.write(f"""
-{Fore.GREEN}======================================={Fore.RESET}
+=======================================
 Record: #{counts}
 Title: {str(record['collection'][counts]['title'])}
 
@@ -66,7 +64,7 @@ Likes: {record['collection'][counts]['_embedded']['stats']['likes_count']}
 Plays: {record['collection'][counts]['_embedded']['stats']['playback_count']} 
 
 Description: {record['collection'][counts]['description']}  
-{Fore.GREEN}==================================================={Fore.RESET} 
+=================================================== 
 """)
       except KeyError:
         pass
@@ -74,11 +72,13 @@ Description: {record['collection'][counts]['description']}
         print("done.")
 
 
-def main():
-  choice = input("[1] Scrape Profile    [2] Scrape Tracks: ")
-  if choice == "1":
-    user_scrape()
-  elif choice == "2":
-    song_scrape()
 if __name__ == "__main__":
-  main()
+  parser = argparse.ArgumentParser()
+  parser.add_argument("-p", help="Scrape profiles referencing the keyword")
+  parser.add_argument("-t", help="Scrape tracks referencing the keyword")
+  cli_args = parser.parse_args()
+  if cli_args.p:
+    user_scrape()
+  if cli_args.t:
+    song_scrape()
+    
