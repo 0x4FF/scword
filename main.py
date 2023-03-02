@@ -1,6 +1,5 @@
 from requests import get
 from json import loads, load
-from os import unlink
 from sys import argv
 import argparse
 
@@ -9,10 +8,6 @@ with open('config.json', 'r+') as file:
   client_id = config["id"]
   
 def user_scrape():
-  try:
-    unlink("results.txt")
-  except:
-    pass
   target = argv[2]
   search_result_json = get(f"https://api-mobile.soundcloud.com/search/users?q={target}&limit=200&client_id={client_id}")
   record = loads(search_result_json.text)
@@ -40,10 +35,6 @@ Bio: {record['collection'][count]['description']}
         pass
         
 def song_scrape():
-  try:
-    unlink("results.txt")
-  except:
-    pass
   target = argv[2]
   search_result_json = get(f"https://api-mobile.soundcloud.com/search/tracks?q={target}&limit=200&client_id={client_id}")
   record = loads(search_result_json.text)
